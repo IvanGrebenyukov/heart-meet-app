@@ -5,7 +5,7 @@ function App() {
 
   return (
     <>
-      <div>fsdwdfwf</div>
+      <div>андрюха гей</div>
     </>
   )
 }
