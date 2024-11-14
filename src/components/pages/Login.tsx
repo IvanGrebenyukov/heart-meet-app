@@ -18,7 +18,7 @@ export const Login = () => {
       <h2 className={"text-3xl font-bold text-black text-center"}>Log In</h2>
 
       <Input
-        label={"dasda"}
+        label={"Email"}
         type={"email"}
         placeholder={"Введите email"}
         register={register("Email", { required: "Email required" })}
