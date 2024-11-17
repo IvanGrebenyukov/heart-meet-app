@@ -14,7 +14,7 @@ export const Login = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className={"space-y-6 w-96"}>
+    <form onSubmit={handleSubmit(onSubmit)} className={"space-y-6 w-[500px] mx-auto p-6 bg-white rounded-2xl shadow-xl"}>
       <h2 className={"text-3xl font-bold text-black text-center"}>Log In</h2>
 
       <Input

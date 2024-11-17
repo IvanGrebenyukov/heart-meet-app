@@ -13,12 +13,13 @@ export const GenderSelect: FC<IGenderSelectProps> = ({
 }) => {
 	
 	const options = [
-		{value: 'male', label: 'Male'},
-		{ value: 'female', label: 'Female'}
+		{value: 'male', label: 'Мужской'},
+		{ value: 'female', label: 'Женский'}
 	]
 	
 	return (
 		<div className={'flex space-x-4'}>
+			<label className="font-semibold text-black mt-2">Пол</label>
 			{options.map((option) => (
 				<button
 					key={option.value}

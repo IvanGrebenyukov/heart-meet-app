@@ -5,7 +5,7 @@ import { Button } from '../ui/buttons/Button.tsx'
 export const WelcomeScreen = () => {
 	return (
 		<div className={'space-y-4'}>
-			<Link to={'/signup-second'}>
+			<Link to={'signup-first'}>
 				<Button className={''}>Sign Up</Button>
 			</Link>
 			<Link to={'login'}>
