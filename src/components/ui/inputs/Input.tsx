@@ -4,23 +4,15 @@ import type { FC, InputHTMLAttributes } from "react";
 interface IInputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   label: string;
-  register: any;
 }
 
-export const Input: FC<IInputProps> = ({
-  children,
-  error,
-  register,
-  label,
-  ...props
-}) => {
+export const Input: FC<IInputProps> = ({ label, error, ...props }) => {
   return (
     <div className={"flex flex-col space-y-2"}>
       {label && (
-        <label className={"font-semibold text-black text-base "}>{label}</label>
+        <label className={"font-semibold text-black text-base"}>{label}</label>
       )}
       <input
-        {...register}
         {...props}
         className={clsx(
           "px-4 py-2 border rounded-lg focus:outline-none",

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { SubmitHandler, Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { interestsList } from "../../constants/interestsList.ts";
-import { useRegistrationStore } from "../../stores/useRegistrationStore.ts";
-import { Button } from "../ui/buttons/Button.tsx";
-import { Input } from "../ui/inputs/Input.tsx";
-import { TextArea } from "../ui/inputs/TextArea.tsx";
-import { GenderSelect } from "../ui/selects/GenderSelect.tsx";
-import { InterestCard } from "../ui/selects/InterestCard.tsx";
+import { interestsList } from "../../constants/interestsList";
+import { useRegistrationStore } from "../../stores/useRegistrationStore";
+import { Button } from "../ui/buttons/Button";
+import { Input } from "../ui/inputs/Input";
+import { TextArea } from "../ui/inputs/TextArea";
+import { GenderSelect } from "../ui/selects/GenderSelect";
+import { InterestCard } from "../ui/selects/InterestCard";
 import "../../styles/formStyles.css";
 
 interface ISignUpSecondProps {
@@ -22,11 +22,14 @@ interface ISignUpSecondProps {
 export const SignUpSecond = () => {
   const { data, setData } = useRegistrationStore();
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm<ISignUpSecondProps>();
-  const [selectedGender, setSelectedGender] = useState(data.gender);
+  const [selectedGender, setSelectedGender] = useState<string>(
+    data.gender || "",
+  );
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const navigate = useNavigate();
 
@@ -39,16 +42,22 @@ export const SignUpSecond = () => {
   };
 
   const onSubmit: SubmitHandler<ISignUpSecondProps> = (formData) => {
-    console.log("Before setData:", data);
+    // Обновляем данные перед переходом
     setData({
       ...formData,
       gender: selectedGender,
       interests: selectedInterests,
     });
-    console.log("After setData:", data);
-    console.log("Final data: ", { ...data, ...formData });
-    navigate("/");
+
+    console.log("Final data:", { ...data, ...formData });
+
+    // Переход на главную страницу после сохранения данных
+    // navigate("/");
   };
+
+  useEffect(() => {
+    console.log(data);
+  }, [data]); // Следим за изменением data
 
   return (
     <form
@@ -56,47 +65,83 @@ export const SignUpSecond = () => {
       className="space-y-6 w-[500px] mx-auto p-6 bg-white rounded-2xl shadow-xl overflow-y-auto max-h-[90vh] custom-scroll"
       style={{ maxHeight: "90vh" }}
     >
-      <h2 className={"text-3xl font-bold text-black text-center"}>
+      <h2 className="text-3xl font-bold text-black text-center">
         Настройка профиля
       </h2>
-      <Input
-        label={"Имя"}
-        register={register("firstName", { required: "Email required" })}
-        error={errors.firstName?.message}
+
+      <Controller
+        name="firstName"
+        control={control}
+        rules={{ required: "Введите имя" }}
+        render={({ field }) => (
+          <Input {...field} label="Имя" error={errors.firstName?.message} />
+        )}
       />
-      <Input
-        label={"Фамилия"}
-        register={register("lastName", { required: "Введите фамилию" })}
-        error={errors.lastName?.message}
+
+      <Controller
+        name="lastName"
+        control={control}
+        rules={{ required: "Введите фамилию" }}
+        render={({ field }) => (
+          <Input {...field} label="Фамилия" error={errors.lastName?.message} />
+        )}
       />
+
       <GenderSelect
         selectedGender={selectedGender}
         onSelect={setSelectedGender}
       />
-      <Input
-        label={"Дата рождения"}
-        type={"date"}
-        register={register("birthDate", { required: "Выберите дату рождения" })}
-        error={errors.birthDate?.message}
+
+      <Controller
+        name="birthDate"
+        control={control}
+        rules={{ required: "Выберите дату рождения" }}
+        render={({ field }) => (
+          <Input
+            {...field}
+            label="Дата рождения"
+            type="date"
+            error={errors.birthDate?.message}
+          />
+        )}
       />
-      <Input
-        label="Город"
-        {...register("city", { required: "Введите ваш город" })}
+
+      <Controller
+        name="city"
+        control={control}
+        rules={{ required: "Введите ваш город" }}
+        render={({ field }) => (
+          <Input {...field} label="Город" error={errors.city?.message} />
+        )}
       />
-      <Input
-        label="Ссылка Telegram"
-        {...register("telegramLink")}
-        placeholder="Необязательно"
+
+      <Controller
+        name="telegramLink"
+        control={control}
+        render={({ field }) => (
+          <Input
+            {...field}
+            label="Ссылка Telegram"
+            placeholder="Необязательно"
+          />
+        )}
       />
-      <TextArea
-        label="О себе"
-        {...register("bio")}
-        placeholder="Расскажите другим о себе"
+
+      <Controller
+        name="bio"
+        control={control}
+        render={({ field }) => (
+          <TextArea
+            {...field}
+            label="О себе"
+            placeholder="Расскажите другим о себе"
+          />
+        )}
       />
 
       <div>
-        <label className={"font-semibold text-black"}>Интересы</label>
-        <div className={"grid grid-cols-3 gap-4 mt-2"}>
+        <label className="font-semibold text-black">Интересы</label>
+        <div className="grid grid-cols-3 gap-4 mt-2">
           {interestsList.map((interest) => (
             <InterestCard
               key={interest.label}
@@ -108,7 +153,8 @@ export const SignUpSecond = () => {
           ))}
         </div>
       </div>
-      <Button type={"submit"} className="mt-4 w-full">
+
+      <Button type="submit" className="mt-4 w-full">
         Завершить регистрацию
       </Button>
     </form>
