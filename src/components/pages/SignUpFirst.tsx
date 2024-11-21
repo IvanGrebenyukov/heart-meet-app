@@ -4,11 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { useRegistrationStore } from "../../stores/useRegistrationStore";
 import { Button } from "../ui/buttons/Button";
 import { Input } from "../ui/inputs/Input";
+import { CheckboxWithText } from "../ui/selects/CheckboxWithText.tsx";
 
 interface ISignUpFirstProps {
   email: string;
   password: string;
   confirmPassword: string;
+  is18Confirmed: boolean;
+  acceptedPolicy: boolean;
 }
 
 export const SignUpFirst = () => {
@@ -18,7 +21,12 @@ export const SignUpFirst = () => {
     handleSubmit,
     formState: { errors },
     watch,
-  } = useForm<ISignUpFirstProps>();
+  } = useForm<ISignUpFirstProps>({
+    defaultValues: {
+      is18Confirmed: false,
+      acceptedPolicy: false,
+    },
+  });
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -94,6 +102,38 @@ export const SignUpFirst = () => {
             type="password"
             placeholder="Повторите пароль"
             error={errors.confirmPassword?.message}
+          />
+        )}
+      />
+
+      <Controller
+        name={"is18Confirmed"}
+        control={control}
+        rules={{ required: "Вы должны подтвердить, что вам есть 18 лет" }}
+        render={({ field }) => (
+          <CheckboxWithText
+            checked={field.value}
+            onChange={field.onChange}
+            label={"Подтверждаю, что мне есть 18 лет."}
+            error={errors.is18Confirmed?.message}
+          />
+        )}
+      />
+
+      <Controller
+        name={"acceptedPolicy"}
+        control={control}
+        rules={{ required: "Вы должны согласиться с политикой сервиса" }}
+        render={({ field }) => (
+          <CheckboxWithText
+            checked={field.value}
+            onChange={field.onChange}
+            label={"Соглашаюсь с"}
+            link={{
+              text: "политикой сервиса",
+              url: "https://vk.com/igrebenyukov",
+            }}
+            error={errors.acceptedPolicy?.message}
           />
         )}
       />
