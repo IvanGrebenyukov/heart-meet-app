@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { SubmitHandler, Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -6,21 +7,23 @@ import { useRegistrationStore } from "../../stores/useRegistrationStore";
 import { Button } from "../ui/buttons/Button";
 import { Input } from "../ui/inputs/Input";
 import { TextArea } from "../ui/inputs/TextArea";
+import { AvatarUpload } from "../ui/selects/AvatarUpload.tsx";
 import { GenderSelect } from "../ui/selects/GenderSelect";
 import { InterestCard } from "../ui/selects/InterestCard";
 import "../../styles/formStyles.css";
 
 interface ISignUpSecondProps {
-  firstName: string;
-  lastName: string;
+  name: string;
   city: string;
   birthDate: string;
-  telegramLink?: string;
+  phoneNumber: string;
+  telegramUserName?: string;
   bio?: string;
 }
 
 export const SignUpSecond = () => {
-  const { data, setData } = useRegistrationStore();
+  const { setData } = useRegistrationStore();
+  const userData = useRegistrationStore((state) => state.data);
   const {
     control,
     handleSubmit,
@@ -28,36 +31,80 @@ export const SignUpSecond = () => {
     watch,
   } = useForm<ISignUpSecondProps>();
   const [selectedGender, setSelectedGender] = useState<string>(
-    data.gender || "",
+    userData.gender || "",
   );
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [selectedInterests, setSelectedInterests] = useState<number[]>([]);
+  const [avatar, setAvatar] = useState<File | null>(null);
   const navigate = useNavigate();
 
-  const toggleInterest = (interest: string) => {
+  const toggleInterest = (index: number) => {
     setSelectedInterests((prev) =>
-      prev.includes(interest)
-        ? prev.filter((i) => i !== interest)
-        : [...prev, interest],
+      prev.includes(index + 1)
+        ? prev.filter((i) => i !== index + 1)
+        : [...prev, index + 1],
     );
   };
 
-  const onSubmit: SubmitHandler<ISignUpSecondProps> = (formData) => {
-    // Обновляем данные перед переходом
-    setData({
+  const handleAvatarUpload = async (file: File) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    console.log(avatar);
+    try {
+      const response = await axios.post(
+        `https://localhost:7268/api/Auth/upload-avatar?userName=${userData.userName}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+
+      setData({ avatar: response.data.avatar }); // Сохраняем путь аватара в store
+      setAvatar(file); // Локально обновляем состояние для отображения
+    } catch (error) {
+      console.error("Ошибка загрузки аватара:", error);
+    }
+  };
+
+  const onSubmit: SubmitHandler<ISignUpSecondProps> = async (formData) => {
+    const profileData = {
       ...formData,
       gender: selectedGender,
       interests: selectedInterests,
-    });
+      phoneNumber: formData.phoneNumber.replace("+", ""), // Убираем '+' из номера
+    };
+    console.log(profileData);
+    try {
+      await axios.post(
+        `https://localhost:7268/api/Auth/register-step2?userName=${userData.userName}`,
+        {
+          name: formData.name,
+          birthDate: formData.birthDate,
+          city: formData.city,
+          gender: selectedGender,
+          interests: selectedInterests,
+          phoneNumber: formData.phoneNumber,
+          telegramUserName: formData.telegramUserName,
+          bio: formData.bio,
+        },
+      );
 
-    console.log("Final data:", { ...data, ...formData });
-
-    // Переход на главную страницу после сохранения данных
-    // navigate("/");
+      // Вход после регистрации
+      const loginResponse = await axios.post(
+        "https://localhost:7268/api/Auth/login",
+        {
+          userName: userData.userName,
+          password: userData.password, // Используем пароль из store
+        },
+      );
+      setData(loginResponse.data); // Сохраняем данные пользователя в store
+      navigate("/profile"); // Переход на страницу профиля
+    } catch (error) {
+      console.error("Ошибка завершения регистрации:", error);
+    }
   };
 
   useEffect(() => {
-    console.log(data);
-  }, [data]); // Следим за изменением data
+    console.log(userData);
+  }, [userData]); // Следим за изменением data
 
   return (
     <form
@@ -69,21 +116,14 @@ export const SignUpSecond = () => {
         Настройка профиля
       </h2>
 
+      <AvatarUpload onUpload={handleAvatarUpload} avatar={userData.avatar} />
+
       <Controller
-        name="firstName"
+        name="name"
         control={control}
         rules={{ required: "Введите имя" }}
         render={({ field }) => (
-          <Input {...field} label="Имя" error={errors.firstName?.message} />
-        )}
-      />
-
-      <Controller
-        name="lastName"
-        control={control}
-        rules={{ required: "Введите фамилию" }}
-        render={({ field }) => (
-          <Input {...field} label="Фамилия" error={errors.lastName?.message} />
+          <Input {...field} label="Имя" error={errors.name?.message} />
         )}
       />
 
@@ -116,7 +156,33 @@ export const SignUpSecond = () => {
       />
 
       <Controller
-        name="telegramLink"
+        name="phoneNumber"
+        control={control}
+        rules={{
+          required: "Введите номер телефона",
+          pattern: {
+            value: /^\+7\d{10}$/,
+            message: "Номер телефона должен быть в формате +7XXXXXXXXXX",
+          },
+        }}
+        render={({ field }) => (
+          <Input
+            {...field}
+            label="Номер телефона"
+            placeholder="+7XXXXXXXXXX"
+            error={errors.phoneNumber?.message}
+            onBlur={(e) => {
+              const value = e.target.value.trim();
+              if (!value.startsWith("+7")) {
+                field.onChange(`+7${value}`);
+              }
+            }}
+          />
+        )}
+      />
+
+      <Controller
+        name="telegramUserName"
         control={control}
         render={({ field }) => (
           <Input
@@ -142,13 +208,13 @@ export const SignUpSecond = () => {
       <div>
         <label className="font-semibold text-black">Интересы</label>
         <div className="grid grid-cols-3 gap-4 mt-2">
-          {interestsList.map((interest) => (
+          {interestsList.map((interest, index) => (
             <InterestCard
-              key={interest.label}
+              key={index}
               label={interest.label}
               icon={interest.icon as string}
-              isSelected={selectedInterests.includes(interest.label)}
-              onClick={() => toggleInterest(interest.label)}
+              isSelected={selectedInterests.includes(index + 1)}
+              onClick={() => toggleInterest(index)}
             />
           ))}
         </div>

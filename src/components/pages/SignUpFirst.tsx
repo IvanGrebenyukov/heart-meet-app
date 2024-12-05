@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -30,14 +31,38 @@ export const SignUpFirst = () => {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const onSubmit = (formData: ISignUpFirstProps) => {
+  const password = watch("password");
+
+  const validatePassword = (password: string) =>
+    /[0-9]/.test(password) || "Пароль должен содержать минимум одну цифру";
+
+  const onSubmit = async (formData: ISignUpFirstProps) => {
     if (formData.password !== formData.confirmPassword) {
       setErrorMessage("Пароли не совпадают");
       return;
     }
-    setErrorMessage(null);
-    setData({ email: formData.email, password: formData.password });
-    navigate("/signup-second");
+
+    try {
+      console.log(formData);
+      await axios.post("https://localhost:7268/api/Auth/register-step1", {
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      });
+      setData({ email: formData.email, password: formData.password });
+      navigate("/login");
+    } catch (error) {
+      setErrorMessage("Ошибка регистрации, попробуйте снова");
+      console.error(error);
+    }
+
+    // if (formData.password !== formData.confirmPassword) {
+    //   setErrorMessage("Пароли не совпадают");
+    //   return;
+    // }
+    // setErrorMessage(null);
+    // setData({ email: formData.email, password: formData.password });
+    // navigate("/signup-second");
   };
 
   return (
