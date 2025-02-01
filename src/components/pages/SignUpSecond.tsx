@@ -45,11 +45,14 @@ export const SignUpSecond = () => {
     );
   };
 
-  const handleAvatarUpload = async (file: File) => {
+  const handleAvatarUpload = async (file: File | null) => {
     if (!file) return;
+
     const formData = new FormData();
-    formData.append("file", file);
-    console.log(avatar);
+    formData.append("Avatar", file);
+    console.log(formData + "  fwfwfw");
+    console.log(userData.userName);
+
     try {
       const response = await axios.post(
         `https://localhost:7268/api/Auth/upload-avatar?userName=${userData.userName}`,
@@ -57,8 +60,10 @@ export const SignUpSecond = () => {
         { headers: { "Content-Type": "multipart/form-data" } },
       );
 
-      setData({ avatar: response.data.avatar }); // Сохраняем путь аватара в store
-      setAvatar(file); // Локально обновляем состояние для отображения
+      // API должен вернуть путь к аватарке
+      const avatarPath = response.data.avatar;
+      console.log(avatarPath);
+      setData({ avatar: avatarPath }); // Сохраняем путь аватара в глобальном хранилище
     } catch (error) {
       console.error("Ошибка загрузки аватара:", error);
     }
@@ -69,7 +74,7 @@ export const SignUpSecond = () => {
       ...formData,
       gender: selectedGender,
       interests: selectedInterests,
-      phoneNumber: formData.phoneNumber.replace("+", ""), // Убираем '+' из номера
+      // phoneNumber: formData.phoneNumber.replace("+7", "8"), // Убираем '+' из номера
     };
     console.log(profileData);
     try {
@@ -81,7 +86,7 @@ export const SignUpSecond = () => {
           city: formData.city,
           gender: selectedGender,
           interests: selectedInterests,
-          phoneNumber: formData.phoneNumber,
+          phoneNumber: "-",
           telegramUserName: formData.telegramUserName,
           bio: formData.bio,
         },
@@ -95,7 +100,8 @@ export const SignUpSecond = () => {
           password: userData.password, // Используем пароль из store
         },
       );
-      setData(loginResponse.data); // Сохраняем данные пользователя в store
+      setData(loginResponse.data);
+      // Сохраняем данные пользователя в store
       navigate("/profile"); // Переход на страницу профиля
     } catch (error) {
       console.error("Ошибка завершения регистрации:", error);
@@ -106,6 +112,17 @@ export const SignUpSecond = () => {
     console.log(userData);
   }, [userData]); // Следим за изменением data
 
+  useEffect(() => {
+    if (avatar) {
+      if (!userData.userName) {
+        console.error("Ошибка: userName отсутствует");
+        return;
+      }
+
+      handleAvatarUpload(avatar);
+    }
+  }, [avatar, userData.userName]);
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -115,9 +132,12 @@ export const SignUpSecond = () => {
       <h2 className="text-3xl font-bold text-black text-center">
         Настройка профиля
       </h2>
-
-      <AvatarUpload onUpload={handleAvatarUpload} avatar={userData.avatar} />
-
+      <AvatarUpload
+        avatar={
+          userData.avatar ? `https://localhost:7268${userData.avatar}` : null
+        }
+        onAvatarChange={setAvatar}
+      />
       <Controller
         name="name"
         control={control}
@@ -126,12 +146,10 @@ export const SignUpSecond = () => {
           <Input {...field} label="Имя" error={errors.name?.message} />
         )}
       />
-
       <GenderSelect
         selectedGender={selectedGender}
         onSelect={setSelectedGender}
       />
-
       <Controller
         name="birthDate"
         control={control}
@@ -145,7 +163,6 @@ export const SignUpSecond = () => {
           />
         )}
       />
-
       <Controller
         name="city"
         control={control}
@@ -154,33 +171,31 @@ export const SignUpSecond = () => {
           <Input {...field} label="Город" error={errors.city?.message} />
         )}
       />
-
-      <Controller
-        name="phoneNumber"
-        control={control}
-        rules={{
-          required: "Введите номер телефона",
-          pattern: {
-            value: /^\+7\d{10}$/,
-            message: "Номер телефона должен быть в формате +7XXXXXXXXXX",
-          },
-        }}
-        render={({ field }) => (
-          <Input
-            {...field}
-            label="Номер телефона"
-            placeholder="+7XXXXXXXXXX"
-            error={errors.phoneNumber?.message}
-            onBlur={(e) => {
-              const value = e.target.value.trim();
-              if (!value.startsWith("+7")) {
-                field.onChange(`+7${value}`);
-              }
-            }}
-          />
-        )}
-      />
-
+      {/* <Controller */}
+      {/*   name="phoneNumber" */}
+      {/*   control={control} */}
+      {/*   rules={{ */}
+      {/*     required: "Введите номер телефона", */}
+      {/*     pattern: { */}
+      {/*       value: /^\+7\d{10}$/, */}
+      {/*       message: "Номер телефона должен быть в формате +7XXXXXXXXXX", */}
+      {/*     }, */}
+      {/*   }} */}
+      {/*   render={({ field }) => ( */}
+      {/*     <Input */}
+      {/*       {...field} */}
+      {/*       label="Номер телефона" */}
+      {/*       placeholder="+7XXXXXXXXXX" */}
+      {/*       error={errors.phoneNumber?.message} */}
+      {/*       onBlur={(e) => { */}
+      {/*         const value = e.target.value.trim(); */}
+      {/*         if (!value.startsWith("+7")) { */}
+      {/*           field.onChange(`+7${value}`); */}
+      {/*         } */}
+      {/*       }} */}
+      {/*     /> */}
+      {/*   )} */}
+      {/* /> */}
       <Controller
         name="telegramUserName"
         control={control}
@@ -192,7 +207,6 @@ export const SignUpSecond = () => {
           />
         )}
       />
-
       <Controller
         name="bio"
         control={control}
@@ -204,7 +218,6 @@ export const SignUpSecond = () => {
           />
         )}
       />
-
       <div>
         <label className="font-semibold text-black">Интересы</label>
         <div className="grid grid-cols-3 gap-4 mt-2">
@@ -219,7 +232,6 @@ export const SignUpSecond = () => {
           ))}
         </div>
       </div>
-
       <Button type="submit" className="mt-4 w-full">
         Завершить регистрацию
       </Button>

@@ -156,7 +156,7 @@ export const SignUpFirst = () => {
             label={"Соглашаюсь с"}
             link={{
               text: "политикой сервиса",
-              url: "https://vk.com/igrebenyukov",
+              url: "https://www.google.com/",
             }}
             error={errors.acceptedPolicy?.message}
           />

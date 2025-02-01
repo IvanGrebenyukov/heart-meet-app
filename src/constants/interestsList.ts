@@ -4,7 +4,7 @@ import moviesIcon from "../assets/icons/movies.png";
 import sportsIcon from "../assets/icons/sports.png";
 import travelIcon from "../assets/icons/travel.png";
 import cookingIcon from "../assets/icons/cooking.png";
-import technologyIcon from "../assets/icons/cooking.png";
+import technologyIcon from "../assets/icons/technology.png";
 import paintingIcon from "../assets/icons/painting.png";
 import autoIcon from "../assets/icons/auto.png";
 import fitnessIcon from "../assets/icons/fitnes.png";

@@ -14,26 +14,8 @@ interface IRegistrationData {
   interests?: string[];
 }
 
-interface IRegistrationStore {
-  data: IRegistrationData;
-  setData: (data: {
-    password: string;
-    phoneNumber?: string;
-    gender: string;
-    city: string;
-    name: string;
-    bio?: string;
-    avatar: string;
-    userName: string;
-    interests: number[];
-    birthDate: string;
-    telegramUserName?: string;
-  }) => void;
-  reset: () => void;
-}
-
-export const useRegistrationStore = create<IRegistrationStore>((set) => ({
-  data: {
+export const useRegistrationStore = create<IRegistrationData>((set) => ({
+  data: JSON.parse(localStorage.getItem("userData") || "{}") || {
     userName: "",
     password: "",
     avatar: "",
@@ -47,8 +29,13 @@ export const useRegistrationStore = create<IRegistrationStore>((set) => ({
     interests: [],
   },
   setData: (newData) =>
-    set((state) => ({ data: { ...state.data, ...newData } })),
-  reset: () =>
+    set((state) => {
+      const updatedData = { ...state.data, ...newData };
+      localStorage.setItem("userData", JSON.stringify(updatedData)); // Сохранение в localStorage
+      return { data: updatedData };
+    }),
+  reset: () => {
+    localStorage.removeItem("userData"); // Очистка localStorage
     set({
       data: {
         userName: "",
@@ -63,5 +50,6 @@ export const useRegistrationStore = create<IRegistrationStore>((set) => ({
         bio: "",
         interests: [],
       },
-    }),
+    });
+  },
 }));
